@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Kayıt Ol | Solar Master</title>
+    <!-- Plus Jakarta Sans Fontu -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .auth-card {
+            background: #1e293b;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid #334155;
+        }
+        h2 {
+            margin-top: 0;
+            font-weight: 700;
+            text-align: center;
+            color: #10b981;
+            margin-bottom: 25px;
+        }
+        label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #cbd5e1;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 6px 0 16px 0;
+            background: #0f172a;
+            color: #f8fafc;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 14px;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #38bdf8;
+            color: #0f172a;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 15px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            transition: transform 0.2s, background 0.2s;
+            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+            margin-top: 10px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            background: #0ea5e9;
+            color: white;
+        }
+        .auth-links {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 13px;
+            color: #94a3b8;
+        }
+        .auth-links a {
+            color: #10b981;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .auth-links a:hover {
+            text-decoration: underline;
+        }
+        .flash-msg {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid #ef4444;
+            color: #fca5a5;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="auth-card">
+        <h2>🚀 Solar Master</h2>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-msg">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            <label>Ad Soyad:</label>
+            <input type="text" name="name" placeholder="Adın Soyadın" required>
+
+            <label>E-posta Adresi:</label>
+            <input type="email" name="email" placeholder="ornek@mail.com" required>
+
+            <label>Şifre:</label>
+            <input type="password" name="password" placeholder="••••••••" required>
+
+            <button type="submit">Kayıt Ol</button>
+        </form>
+
+        <div class="auth-links">
+            Zaten hesabın var mı? <a href="{{ url_for('login') }}">Giriş Yap</a>
+        </div>
+    </div>
+
+</body>
+</html>

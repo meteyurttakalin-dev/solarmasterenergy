@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Solar Master | Next-Gen Solar SaaS</title>
+    <!-- Yeni Nesil Havalı Google Font: Plus Jakarta Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js Daire Grafiği Kütüphanesi -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a; /* Modern koyu/teknolojik arka plan tonu tabanı */
+            --card-bg: #1e293b;
+            --text-color: #f8fafc;
+            --header-bg: #1e293b;
+            --input-bg: #0f172a;
+            --input-border: #334155;
+            --result-bg: #064e3b;
+        }
+        [data-theme="light"] {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #0f172a;
+            --header-bg: #ffffff;
+            --input-bg: #f1f5f9;
+            --input-border: #cbd5e1;
+            --result-bg: #ecfdf5;
+        }
+
+        /* Yeni Nesil Havalı Font Uygulaması */
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; transition: background 0.3s, color 0.3s; }
+        .header { display: flex; justify-content: space-between; align-items: center; background: var(--header-bg); padding: 18px 30px; border-radius: 12px; box-shadow: 0px 4px 20px rgba(0,0,0,0.2); }
+        .main-container { display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap; }
+        .card { background: var(--card-bg); padding: 30px; border-radius: 12px; box-shadow: 0px 4px 20px rgba(0,0,0,0.15); flex: 1; min-width: 320px; transition: background 0.3s; position: relative; border: 1px solid var(--input-border); }
+        input, select { width: 100%; padding: 12px; margin: 6px 0 16px 0; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--input-border); border-radius: 8px; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; }
+        label { font-size: 13px; font-weight: 600; color: var(--text-color); letter-spacing: 0.3px; }
+        button, .pdf-btn { width: 100%; padding: 14px; background: #10b981; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 15px; margin-top: 10px; text-align: center; text-decoration: none; display: inline-block; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; letter-spacing: 0.5px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); transition: transform 0.2s; }
+        button:hover, .pdf-btn:hover { transform: translateY(-2px); background: #059669; }
+        .pdf-btn { background: #3b82f6; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
+        .pdf-btn:hover { background: #2563eb; }
+        .result-box { background: var(--result-bg); border-left: 5px solid #10b981; padding: 18px; margin-top: 15px; border-radius: 8px; }
+        .controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .theme-btn, select.lang-select { padding: 10px 14px; border-radius: 8px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); cursor: pointer; font-weight: 600; font-family: 'Plus Jakarta Sans', sans-serif; }
+        a.logout { color: #ef4444; text-decoration: none; font-weight: 700; }
+
+        /* Otomatik Çıkan Yapay Zeka Konuşma Balonu */
+        .ai-assistant-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            margin-top: 20px;
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px dashed #10b981;
+            padding: 18px;
+            border-radius: 12px;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        .ai-avatar {
+            font-size: 28px;
+            background: #10b981;
+            color: white;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.4);
+        }
+        .speech-bubble {
+            position: relative;
+            background: var(--card-bg);
+            border: 1px solid var(--input-border);
+            padding: 14px 18px;
+            border-radius: 10px;
+            width: 100%;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
+        th, td { border: 1px solid var(--input-border); padding: 10px; text-align: left; }
+        th { background: rgba(255,255,255,0.05); }
+    </style>
+    <script>
+        const citiesData = JSON.parse('{{ locations_json | safe }}');
+
+        const translations = {
+            tr: {
+                welcome: "Selam {{ session['user_name'] }}! ☀️",
+                formTitle: "Güneş Enerjisi Profesyonel Fizibilite Formu",
+                lblCountry: "Ülke:",
+                lblCity: "Şehir:",
+                lblPanel: "Panel Tipi:",
+                optMono: "Monokristal (Yüksek Verim)",
+                optPoly: "Polikristal (Standart Verim)",
+                lblBill: "Aylık Ortalama Elektrik Faturası (TL):",
+                lblCost: "Tahmini Kurulum Maliyeti (Gider - TL):",
+                calcBtn: "Gelişmiş Analizi Başlat",
+                resTitle: "Mühendislik Analiz Sonuçları ve AI Raporu",
+                historyTitle: "📊 Önceki Mühendislik Analizlerim",
+                themeBtn: "☀️ Tema",
+                logoutBtn: "Çıkış Yap"
+            },
+            en: {
+                welcome: "Hello {{ session['user_name'] }}! ☀️",
+                formTitle: "Solar Energy Professional Feasibility Form",
+                lblCountry: "Country:",
+                lblCity: "City:",
+                lblPanel: "Panel Type:",
+                optMono: "Monocrystalline (High Efficiency)",
+                optPoly: "Polycrystalline (Standard Efficiency)",
+                lblBill: "Monthly Average Electricity Bill:",
+                lblCost: "Estimated Installation Cost:",
+                calcBtn: "Start Advanced Analysis",
+                resTitle: "Engineering Analysis Results & AI Report",
+                historyTitle: "📊 My Previous Engineering Analyses",
+                themeBtn: "☀️ Theme",
+                logoutBtn: "Logout"
+            },
+            de: {
+                welcome: "Hallo {{ session['user_name'] }}! ☀️",
+                formTitle: "Solarenergie Professionelles Machbarkeitsformular",
+                lblCountry: "Land:",
+                lblCity: "Stadt:",
+                lblPanel: "Panel-Typ:",
+                optMono: "Monokristallin (Hohe Effizienz)",
+                optPoly: "Polykristallin (Standard Effizienz)",
+                lblBill: "Monatliche Stromrechnung:",
+                lblCost: "Geschätzte Installationskosten:",
+                calcBtn: "Erweiterte Analyse starten",
+                resTitle: "Technische Ergebnisse & KI-Bericht",
+                historyTitle: "📊 Meine vorherigen Analysen",
+                themeBtn: "☀️ Thema",
+                logoutBtn: "Abmelden"
+            }
+        };
+
+        function changeLanguage() {
+            const lang = document.getElementById("langSelect").value;
+            const t = translations[lang] || translations['tr'];
+
+            document.getElementById("welcomeText").innerText = t.welcome;
+            document.getElementById("formTitle").innerText = t.formTitle;
+            document.getElementById("lblCountry").innerText = t.lblCountry;
+            document.getElementById("lblCity").innerText = t.lblCity;
+            document.getElementById("lblPanel").innerText = t.lblPanel;
+            document.getElementById("optMono").innerText = t.optMono;
+            document.getElementById("optPoly").innerText = t.optPoly;
+            document.getElementById("lblBill").innerText = t.lblBill;
+            document.getElementById("lblCost").innerText = t.lblCost;
+            document.getElementById("calcBtn").innerText = t.calcBtn;
+            document.getElementById("resTitle").innerText = t.resTitle;
+            document.getElementById("historyTitle").innerText = t.historyTitle;
+            document.getElementById("themeToggleBtn").innerText = t.themeBtn;
+            document.getElementById("logoutBtn").innerText = t.logoutBtn;
+        }
+
+        function updateCities() {
+            const countrySelect = document.getElementById("countrySelect");
+            const citySelect = document.getElementById("citySelect");
+            const selectedCountry = countrySelect.value;
+            citySelect.innerHTML = "";
+            if (selectedCountry && citiesData[selectedCountry]) {
+                citiesData[selectedCountry].forEach(city => {
+                    let option = document.createElement("option");
+                    option.value = city;
+                    option.textContent = city;
+                    citySelect.appendChild(option);
+                });
+            }
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            if (html.getAttribute("data-theme") === "light") {
+                html.removeAttribute("data-theme");
+            } else {
+                html.setAttribute("data-theme", "light");
+            }
+        }
+
+        window.onload = function() {
+            updateCities();
+        };
+    </script>
+</head>
+<body>
+
+    <div class="header">
+        <h2 id="welcomeText" style="margin: 0; font-weight: 700;">Selam {{ session['user_name'] }}! ☀️</h2>
+        <div class="controls">
+            <select id="langSelect" class="lang-select" onchange="changeLanguage()">
+                <option value="tr">🇹🇷 Türkçe</option>
+                <option value="en">🇬🇧 English</option>
+                <option value="de">🇩🇪 Deutsch</option>
+            </select>
+            <button id="themeToggleBtn" class="theme-btn" onclick="toggleTheme()">☀️ Tema</button>
+            <a href="{{ url_for('logout') }}" id="logoutBtn" class="logout">Çıkış Yap</a>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <!-- Form Alanı -->
+        <div class="card">
+            <h3 id="formTitle" style="margin-top: 0; font-weight: 700;">Güneş Enerjisi Profesyonel Fizibilite Formu</h3>
+            <form method="POST">
+                <label id="lblCountry">Ülke:</label>
+                <select name="country" id="countrySelect" onchange="updateCities()" required>
+                    {% for country in countries %}
+                        <option value="{{ country }}">{{ country }}</option>
+                    {% endfor %}
+                </select>
+
+                <label id="lblCity">Şehir (Güneşlenme Süresi Bölgesi):</label>
+                <select name="city" id="citySelect" required></select>
+
+                <label id="lblPanel">Panel Tipi:</label>
+                <select name="panel_type">
+                    <option id="optMono" value="Monokristal">Monokristal (Yüksek Verim)</option>
+                    <option id="optPoly" value="Polikristal">Polikristal (Standart Verim)</option>
+                </select>
+
+                <div style="display: flex; gap: 12px;">
+                    <div style="flex: 1;">
+                        <label>Panel Gücü (Watt):</label>
+                        <select name="panel_power_watt">
+                            <option value="400">400W</option>
+                            <option value="450" selected>450W</option>
+                            <option value="500">500W</option>
+                            <option value="550">550W (Yüksek Güç)</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1;">
+                        <label>Panel Adedi:</label>
+                        <input type="number" name="panel_count" value="20" min="1" required>
+                    </div>
+                </div>
+
+                <label>Çatı Yönü ve Eğimi:</label>
+                <select name="roof_orientation">
+                    <option value="1.0">Güney Cephe - İdeal Açı (%100 Verim)</option>
+                    <option value="0.90">Güneydoğu / Güneybatı (%90 Verim)</option>
+                    <option value="0.80">Doğu / Batı Cephe (%80 Verim)</option>
+                    <option value="0.65">Kuzey Cephe (%65 Verim)</option>
+                </select>
+
+                <label>Gölgelenme Faktörü:</label>
+                <select name="shading_factor">
+                    <option value="1.0">Tamamen Açık / Gölgesiz (%100)</option>
+                    <option value="0.90">Çok Hafif Uzak Engel (%90)</option>
+                    <option value="0.80">Kısmi / Baca veya Ağaç Gölgesi (%80)</option>
+                </select>
+
+                <label>İnverter ve Sistem Kayıpları:</label>
+                <select name="system_loss">
+                    <option value="0.88">Yüksek Kalite Inverter (%12 Kayıp)</option>
+                    <option value="0.85" selected>Standart Sistem Verimi (%15 Kayıp)</option>
+                    <option value="0.80">Eski/Kayıplı Sistem (%20 Kayıp)</option>
+                </select>
+
+                <label id="lblBill">Aylık Ortalama Elektrik Faturası (TL):</label>
+                <input type="number" step="0.01" name="monthly_bill" placeholder="Örn: 1500" required>
+
+                <label id="lblCost">Tahmini Kurulum Maliyeti (Gider - TL):</label>
+                <input type="number" step="0.01" name="investment_cost" placeholder="Örn: 75000" required>
+
+                <button type="submit" id="calcBtn">Gelişmiş Analizi Başlat</button>
+            </form>
+        </div>
+
+        <!-- Sonuç, Grafik, PDF İndirme ve AI Robotu Alanı -->
+        <div class="card">
+            <h3 id="resTitle" style="margin-top: 0; font-weight: 700;">Mühendislik Analiz Sonuçları ve AI Raporu</h3>
+            {% if result %}
+                <div class="result-box">
+                    <p style="margin: 6px 0;"><strong>Konum:</strong> {{ result.city }}, {{ result.country }}</p>
+                    <p style="margin: 6px 0;"><strong>Kurulu Sistem Gücü:</strong> <span style="color: #38bdf8; font-size: 15px; font-weight: 700;">{{ result.total_system_kwp }} kWp</span></p>
+                    <p style="margin: 6px 0;"><strong>Yıllık Tahmini Enerji Üretimi:</strong> <span style="color: #38bdf8; font-size: 15px; font-weight: 700;">{{ result.annual_generation_kwh }} kWh</span></p>
+                    <p style="margin: 6px 0;"><strong>Yıllık Tahmini Tasarruf:</strong> <span style="color: #34d399; font-size: 17px; font-weight: 800;">{{ result.annual_savings }} TL</span></p>
+                    <p style="margin: 6px 0;"><strong>Yatırımın Kâra Dönüşü (Amorti):</strong> <span style="color: #38bdf8; font-size: 17px; font-weight: 800;">{{ result.amortization_period }} Yıl</span></p>
+                    <p style="margin: 6px 0;"><strong>25 Yıllık Net Kazanç (Dejenerasyon Dahil):</strong> <span style="color: #34d399; font-size: 17px; font-weight: 800;">{{ result.total_25_year_net_savings }} TL</span></p>
+                </div>
+
+                <!-- PDF Raporu İndirme Butonu -->
+                <a href="{{ url_for('download_pdf') }}" class="pdf-btn">📄 Resmi PDF Raporunu İndir</a>
+
+                <!-- Gelişmiş AI Uzman Analiz Asistanı -->
+                <div class="ai-assistant-container">
+                    <div class="ai-avatar">🤖</div>
+                    <div class="speech-bubble">
+                        <strong style="color: #34d399; display: block; margin-bottom: 6px;">Solar Master Kıdemli AI Mühendisi:</strong>
+                        <p style="font-weight: 700; color: {% if result.ai_status == 'success' %}#34d399{% elif result.ai_status == 'warning' %}#fbbf24{% else %}#ef4444{% endif %}; margin: 0 0 8px 0;">
+                            {{ result.ai_summary }}
+                        </p>
+                        <ul style="margin: 0; padding-left: 16px; font-size: 13px; opacity: 0.9;">
+                            {% for tip in result.ai_tips %}
+                                <li style="margin-bottom: 4px;">{{ tip }}</li>
+                            {% endfor %}
+                        </ul>
+                        <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid var(--input-border); font-size: 12px; color: #34d399; font-weight: 600;">
+                            🌱 <strong>Çevresel Katkı:</strong> Yılda <strong>{{ result.annual_co2_saved_kg }} kg</strong> CO2 engelleniyor (Yaklaşık <strong>{{ result.equivalent_trees }} ağaç</strong> kazanımına eşdeğer).
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Daire Grafiği -->
+                <div style="width: 220px; margin: 25px auto 0 auto;">
+                    <canvas id="feasibilityChart"></canvas>
+                </div>
+                <script>
+                    const ctx = document.getElementById('feasibilityChart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Kurulum Maliyeti (TL)', 'Yıllık Tasarruf (TL)'],
+                            datasets: [{
+                                data: [{{ result.investment_cost }}, {{ result.annual_savings }}],
+                                backgroundColor: ['#ef4444', '#10b981'],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            plugins: {
+                                legend: { labels: { color: document.documentElement.getAttribute('data-theme') === 'light' ? '#0f172a' : '#f8fafc', font: { family: 'Plus Jakarta Sans' } } }
+                            }
+                        }
+                    });
+                </script>
+            {% else %}
+                <p style="opacity: 0.6;">Henüz bir hesaplama yapılmadı. Formu eksiksiz doldurarak gelişmiş mühendislik analizini başlatabilirsin.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Geçmiş Analizlerle Karşılaştırma Tablosu -->
+    <div class="main-container">
+        <div class="card">
+            <h3 id="historyTitle" style="margin-top: 0; font-weight: 700;">📊 Önceki Mühendislik Analizlerim</h3>
+            {% if history %}
+                <table>
+                    <tr>
+                        <th>Ülke / Şehir</th>
+                        <th>Panel Tipi</th>
+                        <th>Aylık Fatura</th>
+                        <th>Maliyet</th>
+                        <th>Yıllık Tasarruf</th>
+                        <th>Amorti Süresi</th>
+                    </tr>
+                    {% for row in history %}
+                    <tr>
+                        <td>{{ row[1] }} / {{ row[0] }}</td>
+                        <td>{{ row[2] }}</td>
+                        <td>{{ row[3] }} TL</td>
+                        <td>{{ row[4] }} TL</td>
+                        <td style="color: #34d399; font-weight: 700;">{{ row[5] }} TL</td>
+                        <td style="color: #38bdf8; font-weight: 700;">{{ row[6] }} Yıl</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            {% else %}
+                <p style="opacity: 0.6;">Henüz geçmiş analiz kaydı bulunmuyor.</p>
+            {% endif %}
+        </div>
+    </div>
+
+</body>
+</html>
